@@ -3,8 +3,8 @@ import api from '../api';
 
 const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+export function AuthProvider({ children }) {
+  const [user, setUser]       = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,12 +23,14 @@ export const AuthProvider = ({ children }) => {
     const res = await api.post('/auth/login', { email, password });
     localStorage.setItem('token', res.data.token);
     setUser(res.data.user);
+    return res.data;
   };
 
-  const register = async (name, email, password, caregiverEmail) => {
-    const res = await api.post('/auth/register', { name, email, password, caregiverEmail });
+  const register = async (name, email, password, caregiverEmail, role) => {
+    const res = await api.post('/auth/register', { name, email, password, caregiverEmail, role });
     localStorage.setItem('token', res.data.token);
     setUser(res.data.user);
+    return res.data;
   };
 
   const logout = () => {
@@ -36,11 +38,16 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const refreshUser = async () => {
+    const res = await api.get('/auth/me');
+    setUser(res.data);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
 export const useAuth = () => useContext(AuthContext);
